@@ -35,6 +35,7 @@ class VADProcessor:
     def _process_loop(self):
         silence_counter = 0
         silence_threshold = int(config.SILENCE_THRESHOLD_MS / config.CHUNK_DURATION_MS)
+        max_buffer_bytes = int(config.SAMPLE_RATE * 2 * 10)
         buffer_bytes = bytearray()
         draft_buffer_bytes = bytearray()
         
@@ -68,8 +69,36 @@ class VADProcessor:
                     draft_buffer_bytes = draft_buffer_bytes[-bytes_to_keep:]
                 
                 # Chốt câu
-                if silence_counter > silence_threshold:
+                force_cut = len(buffer_bytes) >= max_buffer_bytes
+                
+                if silence_counter > silence_threshold or force_cut:
                     self.is_recording = False
+                    
+                    # Bắt buộc check Silero VAD (kể cả khi bị ép cắt 10s) để lọc bỏ nhạc nền
+                    if len(buffer_bytes) > (config.SAMPLE_RATE * 2 * 0.5): 
+                        audio_np = np.frombuffer(buffer_bytes, dtype=np.int16).astype(np.float32) / 32768.0
+                        
+                        is_human_voice = False
+                        with torch.no_grad():
+                            for i in range(0, len(audio_np) - 512, 512):
+                                chunk_512 = torch.from_numpy(audio_np[i:i+512])
+                                confidence = self.silero_vad(chunk_512, config.SAMPLE_RATE).item()
+                                
+                                # Đã nâng độ khó: Tự tin trên 60% mới nhận là tiếng người
+                                if confidence > 0.6: 
+                                    is_human_voice = True
+                                    break
+                        
+                        # Chỉ khi CÓ GIỌNG NGƯỜI mới ném cho Verify Model
+                        if is_human_voice:
+                            self.verify_queue.put(audio_np)
+                            
+                    buffer_bytes.clear()
+                    
+                    # Reset lại bộ đếm để chuẩn bị cho câu tiếp theo một cách sạch sẽ
+                    if force_cut:
+                        silence_counter = 0
+                    
                     if len(buffer_bytes) > (config.SAMPLE_RATE * 2 * 0.5): 
                         audio_np = np.frombuffer(buffer_bytes, dtype=np.int16).astype(np.float32) / 32768.0
                         

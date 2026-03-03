@@ -3,6 +3,7 @@ import logging
 import queue
 from faster_whisper import WhisperModel
 import config
+import re 
 
 logger = logging.getLogger("STTEngine")
 
@@ -18,6 +19,29 @@ class STTEngine:
         self.prompt_context = []
         self.is_running = False
 
+    def _clean_hallucinations(self, text):
+            """Hàm dọn dẹp các câu ảo giác đặc sản của Whisper"""
+            if not text:
+                return ""
+                
+            # Danh sách các câu ma ám thường gặp
+            blacklisted_phrases = [
+                "Hãy subscribe cho kênh La La School",
+                "Để không bỏ lỡ những video hấp dẫn",
+                "Cảm ơn các bạn đã theo dõi",
+                "Hẹn gặp lại các bạn",
+                "hãy đăng ký kênh",
+                "Chào mừng các bạn đến với",
+            ]
+            
+            cleaned_text = text
+            for phrase in blacklisted_phrases:
+                # Xóa các cụm từ này khỏi văn bản (không phân biệt hoa thường)
+                # Dùng .replace thô sơ hoặc re.sub nếu muốn nâng cao
+                import re
+                cleaned_text = re.sub(phrase, '', cleaned_text, flags=re.IGNORECASE)
+                
+            return cleaned_text.strip()
     def load_models(self):
         if self.verify_model is not None: return
         logger.info("Đang nạp Verify Model (Large) vào VRAM. Vui lòng đợi...")
@@ -45,13 +69,15 @@ class STTEngine:
                 segments, _ = self.draft_model.transcribe(
                     audio_np, beam_size=1, 
                     without_timestamps=True, 
-                    vad_filter=True, 
+                    vad_filter=True,
+                    vad_parameters=dict(min_silence_duration_ms=500),
                     condition_on_previous_text=False, 
                     no_speech_threshold=0.7,
                     compression_ratio_threshold=2.4,
                     log_prob_threshold=-1.0
                 )
                 text = " ".join([s.text for s in segments]).strip()
+                text = self._clean_hallucinations(text)
                 if text and self.on_realtime_update:
                     self.on_realtime_update(text)
             except Exception as e:
@@ -73,12 +99,14 @@ class STTEngine:
                     condition_on_previous_text=False,
                     initial_prompt=final_prompt,
                     vad_filter=True,
+                    vad_parameters=dict(min_silence_duration_ms=500),
                     no_speech_threshold=0.7,
                     compression_ratio_threshold=2.4,
                     log_prob_threshold=-1.0
                 )
                 
                 full_text = " ".join([s.text for s in segments]).strip()
+                full_text = self._clean_hallucinations(full_text)
                 
                 if full_text and self.on_transcription_final:
                     self.on_transcription_final(full_text)
