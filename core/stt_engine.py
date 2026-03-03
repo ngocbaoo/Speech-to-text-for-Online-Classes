@@ -24,7 +24,6 @@ class STTEngine:
             if not text:
                 return ""
                 
-            # Danh sách các câu ma ám thường gặp
             blacklisted_phrases = [
                 "Hãy subscribe cho kênh La La School",
                 "Để không bỏ lỡ những video hấp dẫn",
@@ -36,8 +35,6 @@ class STTEngine:
             
             cleaned_text = text
             for phrase in blacklisted_phrases:
-                # Xóa các cụm từ này khỏi văn bản (không phân biệt hoa thường)
-                # Dùng .replace thô sơ hoặc re.sub nếu muốn nâng cao
                 import re
                 cleaned_text = re.sub(phrase, '', cleaned_text, flags=re.IGNORECASE)
                 
@@ -111,7 +108,7 @@ class STTEngine:
                 if full_text and self.on_transcription_final:
                     self.on_transcription_final(full_text)
                     
-                    # self.prompt_context.append(full_text) (Giữ nguyên việc comment dòng này như bạn đã cấu hình)
+                    # self.prompt_context.append(full_text)
                     if len(self.prompt_context) > 3:
                         self.prompt_context.pop(0)
             except Exception as e:

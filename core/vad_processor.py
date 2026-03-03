@@ -60,7 +60,6 @@ class VADProcessor:
                 buffer_bytes.extend(chunk)
                 draft_buffer_bytes.extend(chunk)
                 
-                # Gửi bản nháp
                 if len(draft_buffer_bytes) >= (config.SAMPLE_RATE * 2 * 1.5):
                     audio_np = np.frombuffer(draft_buffer_bytes, dtype=np.int16).astype(np.float32) / 32768.0
                     if not self.draft_queue.full():
@@ -68,13 +67,11 @@ class VADProcessor:
                     bytes_to_keep = int(config.SAMPLE_RATE * 2 * 0.5)
                     draft_buffer_bytes = draft_buffer_bytes[-bytes_to_keep:]
                 
-                # Chốt câu
                 force_cut = len(buffer_bytes) >= max_buffer_bytes
                 
                 if silence_counter > silence_threshold or force_cut:
                     self.is_recording = False
                     
-                    # Bắt buộc check Silero VAD (kể cả khi bị ép cắt 10s) để lọc bỏ nhạc nền
                     if len(buffer_bytes) > (config.SAMPLE_RATE * 2 * 0.5): 
                         audio_np = np.frombuffer(buffer_bytes, dtype=np.int16).astype(np.float32) / 32768.0
                         
@@ -84,18 +81,15 @@ class VADProcessor:
                                 chunk_512 = torch.from_numpy(audio_np[i:i+512])
                                 confidence = self.silero_vad(chunk_512, config.SAMPLE_RATE).item()
                                 
-                                # Đã nâng độ khó: Tự tin trên 60% mới nhận là tiếng người
                                 if confidence > 0.6: 
                                     is_human_voice = True
                                     break
                         
-                        # Chỉ khi CÓ GIỌNG NGƯỜI mới ném cho Verify Model
                         if is_human_voice:
                             self.verify_queue.put(audio_np)
                             
                     buffer_bytes.clear()
                     
-                    # Reset lại bộ đếm để chuẩn bị cho câu tiếp theo một cách sạch sẽ
                     if force_cut:
                         silence_counter = 0
                     

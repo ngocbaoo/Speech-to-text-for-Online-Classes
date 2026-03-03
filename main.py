@@ -12,16 +12,13 @@ logging.getLogger("faster_whisper").setLevel(logging.ERROR)
 
 class STTOrchestrator:
     def __init__(self):
-        # 1. Khởi tạo đường ống
         self.audio_queue = queue.Queue(maxsize=100)
         self.draft_queue = queue.Queue(maxsize=5)
         self.verify_queue = queue.Queue(maxsize=20)
         
-        # 2. Trạng thái UI
         self.confirmed_sentences = []
         self.full_transcript = []
         
-        # 3. Khởi tạo các Modules
         self.audio_module = AudioCapture(self.audio_queue)
         self.vad_module = VADProcessor(self.audio_queue, self.draft_queue, self.verify_queue)
         self.stt_module = STTEngine(
@@ -69,7 +66,6 @@ class STTOrchestrator:
         print(final_text)
         print("="*60)
         
-        # Tự động lưu ra file text
         if final_text.strip():
             filename = f"transcript_output_{int(time.time())}.txt"
             with open(filename, "w", encoding="utf-8") as f:
