@@ -35,7 +35,7 @@ class VADProcessor:
     def _process_loop(self):
         silence_counter = 0
         silence_threshold = int(config.SILENCE_THRESHOLD_MS / config.CHUNK_DURATION_MS)
-        max_buffer_bytes = int(config.SAMPLE_RATE * 2 * 10)
+        max_buffer_bytes = int(config.SAMPLE_RATE * 2 * 5)
         buffer_bytes = bytearray()
         draft_buffer_bytes = bytearray()
         

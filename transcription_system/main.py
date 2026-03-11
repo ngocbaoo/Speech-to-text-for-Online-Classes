@@ -67,7 +67,7 @@ class STTOrchestrator:
         print("="*60)
         
         if final_text.strip():
-            filename = f"transcript_output_{int(time.time())}.txt"
+            filename = f"transcription.txt"
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(final_text)
             print(f"Đã lưu nội dung vào file: {filename}\n")

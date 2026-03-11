@@ -4,6 +4,7 @@ import queue
 from faster_whisper import WhisperModel
 import config
 import re 
+import time
 
 logger = logging.getLogger("STTEngine")
 
@@ -32,6 +33,8 @@ class STTEngine:
                 "hãy đăng ký kênh",
                 "Chào mừng các bạn đến với",
                 "Hãy subscribe cho kênh Ghiền Mì Gõ",
+                "Hãy subscribe cho kênh lalaschool",
+                "thank you for watching and see you in the next video"
             ]
             
             cleaned_text = text
@@ -83,6 +86,7 @@ class STTEngine:
 
     def _verify_worker(self):
         bilingual_hint = "Cuộc hội thoại này sử dụng song ngữ Tiếng Việt và Tiếng Anh."
+        
         while self.is_running:
             try: audio_np = self.verify_queue.get(timeout=0.1)
             except queue.Empty: continue
@@ -91,7 +95,9 @@ class STTEngine:
                 context_str = " ".join(self.prompt_context)
                 final_prompt = bilingual_hint + context_str
                 
-                segments, _ = self.verify_model.transcribe(
+                start_time = time.time()
+                
+                segments, info = self.verify_model.transcribe(
                     audio_np, 
                     beam_size=5, 
                     condition_on_previous_text=False,
@@ -100,14 +106,20 @@ class STTEngine:
                     vad_parameters=dict(min_silence_duration_ms=500),
                     no_speech_threshold=0.7,
                     compression_ratio_threshold=2.4,
-                    log_prob_threshold=-1.0
+                    log_prob_threshold=-1.0 
                 )
                 
                 full_text = " ".join([s.text for s in segments]).strip()
                 full_text = self._clean_hallucinations(full_text)
                 
+                process_time = time.time() - start_time
+                audio_duration = len(audio_np) / 16000 
+                rtf = process_time / audio_duration if audio_duration > 0 else 0
+                
                 if full_text and self.on_transcription_final:
                     self.on_transcription_final(full_text)
+                    
+                    print(f"\n[METRICS] Độ dài Audio: {audio_duration:.2f}s | Dịch mất: {process_time:.2f}s | RTF: {rtf:.3f}")
                     
                     # self.prompt_context.append(full_text)
                     if len(self.prompt_context) > 3:
