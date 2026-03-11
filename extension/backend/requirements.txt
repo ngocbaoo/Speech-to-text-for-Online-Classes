@@ -1,5 +1,4 @@
-# Bước 1 — torch CUDA 
-pip install torch==2.5.1+cu121 torchaudio==2.5.1+cu121 --index-url https://download.pytorch.org/whl/cu121
+torch==2.5.1+cu121 torchaudio==2.5.1+cu121 --index-url https://download.pytorch.org/whl/cu121
 
 faster-whisper==1.0.3
 webrtcvad-wheels==2.0.14

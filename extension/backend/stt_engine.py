@@ -32,6 +32,7 @@ class STTEngine:
                 "hãy đăng ký kênh",
                 "Chào mừng các bạn đến với",
                 "Hãy subscribe cho kênh Ghiền Mì Gõ",
+                "Hãy subscribe cho kênh lalaschool"
             ]
             
             cleaned_text = text
