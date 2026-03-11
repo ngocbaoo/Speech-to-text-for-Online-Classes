@@ -20,21 +20,17 @@
       font-family: 'Be Vietnam Pro', sans-serif;
     }
 
-    /* Thanh màu trên cùng */
     .bar {
       flex-shrink: 0;
       height: 2px;
       background: linear-gradient(90deg, #6366f1, #818cf8, #a78bfa);
     }
 
-    /* Vùng scroll toàn bộ chiều cao còn lại */
     #scroll-area {
       flex: 1;
       overflow-y: auto;
       padding: 12px 22px 6px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end; /* text bắt đầu từ dưới lên */
+      /* justify-content: flex-end đã bị xóa — nó chặn scroll */
     }
 
     #scroll-area::-webkit-scrollbar { width: 4px; }
@@ -47,9 +43,13 @@
       color: rgba(255, 255, 255, 0.93);
       line-height: 1.8;
       word-wrap: break-word;
+      /* min-height đẩy text xuống dưới khi ít chữ */
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
     }
 
-    /* Draft ở dưới cùng, luôn visible */
     #draft-text {
       flex-shrink: 0;
       padding: 4px 22px 12px;

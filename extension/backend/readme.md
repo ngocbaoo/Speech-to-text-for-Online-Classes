@@ -30,11 +30,8 @@ Chrome Extension (overlay.js)
 pip install torch==2.5.1+cu121 torchaudio==2.5.1+cu121 --index-url https://download.pytorch.org/whl/cu121
 
 # 2. Các thư viện còn lại
-pip install faster-whisper>=1.0.0 webrtcvad==2.0.10 numpy scipy websockets>=12.0
+pip install -r requirements.txt
 ```
-
-> ⚠️ **Lưu ý:** `torch` CUDA **không thể** cài qua `pip install -r requirements.txt` thông thường vì cần `--index-url` đặc biệt. Phải chạy 2 lệnh riêng như trên.  
-> `pyaudiowpatch` không còn cần thiết — audio giờ đến từ trình duyệt.
 
 ### Start the server
 ```bash
@@ -110,10 +107,7 @@ stt-system/
     ├── overlay.js         ← Floating transcript panel (injected into tab)
     ├── popup.html         ← Extension popup UI
     ├── popup.js           ← Popup logic + stats
-    └── icons/
-        ├── icon16.png
-        ├── icon48.png
-        └── icon128.png
+
 ```
 
 ---

@@ -1,10 +1,3 @@
-"""
-server.py — WebSocket STT server
-Protocol:
-  Client gửi JSON {"role":"audio"|"result"} làm message đầu tiên.
-  - role "audio"  : gửi tiếp PCM Int16 binary @ 16kHz
-  - role "result" : chỉ nhận JSON {"type":"draft"|"final","text":"..."}
-"""
 import asyncio, json, queue, logging, threading
 import websockets
 from vad_processor import VADProcessor
